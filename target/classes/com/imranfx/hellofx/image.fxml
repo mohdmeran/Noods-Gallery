@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane fx:id="img_card" onMouseClicked="#click" prefHeight="200.0" prefWidth="200.0" stylesheets="@main.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.imranfx.hellofx.ImageController">
+   <children>
+      <ImageView fx:id="img_picture" fitHeight="165.0" fitWidth="208.0" layoutX="16.0" layoutY="18.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../../../img/FD3viwXUUAI3M0G.jpg" />
+         </image>
+      </ImageView>
+      <ImageView fx:id="img_love" fitHeight="81.0" fitWidth="80.0" layoutX="120.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../../../img/love.png" />
+         </image>
+      </ImageView>
+   </children>
+   <styleClass>
+      <String fx:value="image" />
+      <String fx:value="float-shadow" />
+   </styleClass>
+</AnchorPane>
