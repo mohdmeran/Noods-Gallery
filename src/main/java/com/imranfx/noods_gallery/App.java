@@ -1,4 +1,4 @@
-package com.imranfx.hellofx;
+package com.imranfx.noods_gallery;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -7,17 +7,11 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-
 /**
  * JavaFX App
  */
 public class App extends Application {
-    
-//    TODO
-//    Procastinate
-//    link picture, description into database
-//    picture able to search
-//    pictures generate video
+
     private static Scene scene;
     public static final int width = 1280;
     public static final int height = 720;
@@ -41,6 +35,5 @@ public class App extends Application {
     public static void main(String[] args) {
         launch();
     }
-    
 
 }

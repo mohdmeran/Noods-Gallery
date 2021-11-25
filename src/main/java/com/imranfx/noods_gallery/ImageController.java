@@ -2,9 +2,9 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/javafx/FXMLController.java to edit this template
  */
-package com.imranfx.hellofx;
+package com.imranfx.noods_gallery;
 
-import com.imranfx.hellofx.model.MyImage;
+import com.imranfx.noods_gallery.model.MyImage;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.net.URL;

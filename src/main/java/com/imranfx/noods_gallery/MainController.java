@@ -2,9 +2,10 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/javafx/FXMLController.java to edit this template
  */
-package com.imranfx.hellofx;
+package com.imranfx.noods_gallery;
 
-import com.imranfx.hellofx.model.MyImage;
+import com.imranfx.noods_gallery.database.mysql;
+import com.imranfx.noods_gallery.model.MyImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -95,11 +96,14 @@ public class MainController implements Initializable {
     private MyListener myListener;
     private List<MyImage> images = new ArrayList<>();
     private int column = 0, row = 0;
+    private mysql db;
     /**
      * Initializes the controller class.
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        this.db = new mysql();
+        
         File directory = new File(".\\StoreImages");
         if (! directory.exists()){
             directory.mkdir();
