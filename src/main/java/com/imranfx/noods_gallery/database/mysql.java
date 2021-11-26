@@ -8,6 +8,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import io.github.cdimascio.dotenv.Dotenv;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -48,7 +50,8 @@ public class mysql {
             Statement statement = connection.createStatement();
             statement.execute(q);
         } catch (SQLException ex) {
-
+            System.out.println("Query failed");
+            System.out.println(ex);
         }
     }
     
@@ -65,7 +68,48 @@ public class mysql {
     }
     
     public ResultSet search_index(String q) {
-        String query = "select * from image where match(name, description) against ('" + q + "' IN NATURAL LANGUAGE MODE)";
+        String query = "select * from image where (name like '" + q + "') or (description like '" + q + "')";
         return query_result(query);
+    }
+    
+    public ResultSet get_all_image(){
+        String query = "select * from image";
+        return query_result(query);
+    }
+    
+    public void add_image(String name, String description) {
+        String q = String.format("insert into image(name, description) values ('%s', '%s');", name, description);
+        this.query(q);
+    }
+    
+    public void add_image(String name) {
+        this.add_image(name, "");
+    }
+    
+    public void update_description(String imgName, String desc) {
+        String q = String.format("update image set description = '%s' where name = '%s'", desc, imgName);
+        this.query(q);
+    }
+    
+    public void delete_image(String name) {
+        String q = String.format("delete from image where (name like '%s')", name);
+        this.query(q);
+    }
+    
+    public boolean isEmpty() {
+        try {
+            String q = String.format("select count(name) as total from image");
+            
+            ResultSet r = this.query_result(q);
+            
+            while(r.next()){
+                System.out.println(r.getInt("total"));
+                return !(r.getInt("total") > 0);
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex);
+        }
+        
+        return false;
     }
 }

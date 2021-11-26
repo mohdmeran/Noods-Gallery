@@ -15,6 +15,8 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -94,9 +96,9 @@ public class MainController implements Initializable {
     
     private ImageController currentFocusController;
     private MyListener myListener;
-    private List<MyImage> images = new ArrayList<>();
     private int column = 0, row = 0;
     private mysql db;
+    private String imageStorePath = ".\\StoreImages";
     /**
      * Initializes the controller class.
      */
@@ -112,20 +114,44 @@ public class MainController implements Initializable {
         this.bindProperty();
         this.checkActionButton();
         
-        images.addAll(initData());
+        //init all saved images in directory
+        this.updateLocalToDatabase();
         
+        //add click listener to ImageController
         myListener = (ImageController imageController) -> {
             changeFocus(imageController);
         };
         
-        if(images.isEmpty()) return;
-
-        ImageController imageController = this.loadImage(images.get(0));
-        this.currentFocusController = imageController;
-        this.changeFocus(imageController);
+        if(db.isEmpty()) return;
         
-        for(int i = 1; i < images.size(); i++) {
-            this.loadImage(images.get(i));
+        // load data from database, and then get the path, create image, and loadImage into UI
+        ResultSet all_image = db.get_all_image();
+        
+        try {
+            while(all_image.next()){
+                //create File of the image path
+                File imgFile = new File(String.format("%s\\%s", imageStorePath, all_image.getString("name")));
+                
+                //create the image from the path if exist
+                if(imgFile.exists() && !imgFile.isDirectory()) {
+                    ImageController imgController = this.loadImage(this.createMyImage(imgFile.getAbsolutePath(), all_image.getString("description")));
+                    
+                    //if image is the first row, focus on it
+                    if(all_image.isFirst()) {
+                        this.currentFocusController = imgController;
+                        this.changeFocus(imgController);
+                    }
+                    
+                    continue;
+                }
+                
+                // delete row if image is not in directory
+                db.delete_image(all_image.getString("name"));
+                System.out.println("File not exist: " + all_image.getString("name"));
+            }
+        } catch (SQLException ex) {
+            System.out.println("fail query out all result set of all image");
+            return;
         }
     }
     
@@ -142,29 +168,48 @@ public class MainController implements Initializable {
         }
     }
     
-    private List<MyImage> initData() {
+    /**
+     * grab all images in storedImage folder and check the image in database
+     * if image is not yet stored in database, create column for the said image
+     */
+    private void updateLocalToDatabase() {
         File imagesDirectory = new File(".\\StoreImages");
         
         File[] storedImages = imagesDirectory.listFiles((File dir, String name) -> {
             return name.toLowerCase().endsWith(".jpg") || name.toLowerCase().endsWith(".png");
         });
         
-        List<MyImage> images = new ArrayList<>();
-        
         for(File storedImage : storedImages) {
-            images.add(this.createMyImage(storedImage.getAbsolutePath()));
+            String q = String.format("select count(name) as total from image where name like '%s'", storedImage.getName());
+            ResultSet image_count = db.query_result(q);
+            try {
+                while(image_count.next()){
+                    //if image is not in database, add it
+                    if(image_count.getInt("total") == 0) {
+                        db.add_image(storedImage.getName());
+                    }
+                }
+            } catch (SQLException ex) {
+                System.out.println(ex);
+            }
         }
+    }
 
-        return images;
+    private void grabImageData() {
+        // TODO
     }
     
-    private MyImage createMyImage(String absPath) {
+    private MyImage createMyImage(String absPath, String description) {
         MyImage img = new MyImage();
         img.setName(absPath.substring(absPath.lastIndexOf("\\") + 1));
-        img.setCaption("");
+        img.setCaption(description);
         img.setImgSrc(absPath);
         
         return img;
+    }
+    
+    private MyImage createMyImage(String absPath) {
+        return createMyImage(absPath, "");
     }
     
     private Image crop(Image img) {
@@ -221,6 +266,12 @@ public class MainController implements Initializable {
     @FXML
     void saveCaption() {
         this.currentFocusController.updateCaption(caption.getText());
+        
+        //save image caption to db
+        String absPath = this.currentFocusController.getImg().getImgSrc();
+        String imgName = absPath.substring(absPath.lastIndexOf("\\") + 1);
+        this.db.update_description(imgName, caption.getText());
+
         this.checkActionButton();
     }
     
@@ -234,30 +285,35 @@ public class MainController implements Initializable {
         List<File> selectedFile = fileChooser.showOpenMultipleDialog(stage);
         if(selectedFile == null) return;
         
-        List<MyImage> newImages = new ArrayList<>();
-        
         ImageController imageController = null;
         
         for(int i = 0; i < selectedFile.size(); i++) {
             File file = selectedFile.get(i);
             String path = file.getAbsolutePath();
             
-            //this will add new images into images array list, right now is not needed but if need then uncomment it
-            // newImages.add(this.createMyImage(path));
-            
             //copy image to saved folder
             try {
                 Path savedFolder = Paths.get(".\\StoreImages\\" + file.getName());
                 Files.copy(file.toPath(), savedFolder);
             } catch(IOException ex) {
+                System.out.println(ex);
                 continue;
             }
             
+            /**
+             * TODO
+             * If searching done, make the image not load into UI
+             * if search parameter does not contain the image properties
+             */
+            //update to database
+            db.add_image(file.getName());
             imageController = this.loadImage(this.createMyImage(path));
         }
-        this.changeFocus(imageController);
-        
-        this.images.addAll(newImages);
+        try {
+            this.changeFocus(imageController);
+        } catch(Exception e) {
+            System.out.println("Fail to get focus image");
+        }
     }
     
     private ImageController loadImage(MyImage img) {
