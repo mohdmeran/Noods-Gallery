@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.fxml.FXML;
@@ -35,6 +37,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.InputMethodEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
@@ -106,6 +109,13 @@ public class MainController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         this.db = new mysql();
         
+        input_search.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observableValue, String s, String s2) {
+                onTextChange(s2);
+            }
+        });
+        
         File directory = new File(".\\StoreImages");
         if (! directory.exists()){
             directory.mkdir();
@@ -166,6 +176,10 @@ public class MainController implements Initializable {
         } catch (FileNotFoundException ex) {
             Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    public void unFocus() {
+        // TODO remove focus of grid is empty
     }
     
     /**
@@ -316,6 +330,44 @@ public class MainController implements Initializable {
         }
     }
     
+    private void onTextChange(String change) {
+        ResultSet images = db.search_index(change);
+        List<MyImage> list_images = new ArrayList<>();
+        
+        try {
+            while(images.next()) {
+                images.getString("name");
+                String name = this.getImgAbsPath(images.getString("name"));
+                String desc = images.getString("description");
+                
+                list_images.add(this.createMyImage(name, desc));
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex);
+        }
+        
+        this.update_images(list_images);
+    }
+    
+    private String getImgAbsPath(String imgName) {
+        File imgFile = new File(this.imageStorePath + "\\" + imgName);
+        return imgFile.getAbsolutePath();
+    }
+    
+    private void update_images(List<MyImage> images) {
+        grid.getChildren().clear();
+        this.column = 0;
+        this.row = 0;
+        if(images.isEmpty()) return;
+        
+        //set new focus
+        this.changeFocus(loadImage(images.get(0)));
+        
+        for(int i = 1; i < images.size(); i++) {
+            loadImage(images.get(i));
+        }
+    }
+    
     private ImageController loadImage(MyImage img) {
         ImageController imageController = null;
         
@@ -370,6 +422,4 @@ public class MainController implements Initializable {
         
         this.editAble();
     }
-    
-    
 }

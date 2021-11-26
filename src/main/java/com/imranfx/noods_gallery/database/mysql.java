@@ -68,7 +68,7 @@ public class mysql {
     }
     
     public ResultSet search_index(String q) {
-        String query = "select * from image where (name like '" + q + "') or (description like '" + q + "')";
+        String query = "select * from image where (name like '%" + q + "%') or (description like '%" + q + "%')";
         return query_result(query);
     }
     
