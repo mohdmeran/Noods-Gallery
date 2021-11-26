@@ -21,6 +21,7 @@ public class mysql {
     String user;
     String pass;
     String tableName;
+    String databaseName;
     Connection connection;
     
     public mysql() {
@@ -31,6 +32,7 @@ public class mysql {
         .load();
         
         this.url = dotenv.get("env_url");
+        this.databaseName = dotenv.get("env_databaseName");
         this.user = dotenv.get("env_user");
         this.pass = dotenv.get("env_pass");
         this.tableName = dotenv.get("env_tableName");
@@ -40,7 +42,7 @@ public class mysql {
     public void connect() {
         try {
             Class.forName("com.mysql.jdbc.Driver");
-            connection = DriverManager.getConnection(url, user, pass);
+            connection = DriverManager.getConnection(url+databaseName, user, pass);
             System.out.println("Connected to database" + url);
         } catch (ClassNotFoundException | SQLException ex) {
             System.out.println(ex);
